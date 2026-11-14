@@ -1,0 +1,10 @@
+{
+  "name": "Barrantuba - Clube de Pesca",
+  "description": "Aplicativo oficial dos membros do Barrantuba para cadastro de pontos de pesca, registro de capturas com iscas, parceiros pescando em tempo real no mapa, chat integrado, ranking e clima ao vivo.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
