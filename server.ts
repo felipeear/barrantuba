@@ -65,7 +65,7 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function startServer() {
+export async function createApp() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
@@ -126,9 +126,13 @@ async function startServer() {
   };
 
   // Start fast table creation immediately on boot; heavy PNG seeding begins once tables exist
-  void ensureTablesReady().then(() => {
-    triggerBackgroundSeeding();
-  });
+  // Vercel functions are short-lived: do not run heavy background seed jobs there.
+  // In a traditional long-running server, preserve the original startup behavior.
+  if (!process.env.VERCEL) {
+    void ensureTablesReady().then(() => {
+      triggerBackgroundSeeding();
+    });
+  }
 
   // Ensure API handlers wait briefly only for fast table creation (never blocking on image seeding)
   app.use('/api', async (req, _res, next) => {
@@ -739,11 +743,18 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Barrantuba Clube de Pesca server listening on http://0.0.0.0:${PORT}`);
-  });
+  return app;
 }
 
-startServer().catch((err) => {
-  console.error('Fatal error starting Barrantuba server:', err);
-});
+// Start a persistent HTTP server only outside Vercel.
+if (!process.env.VERCEL) {
+  createApp().then((app) => {
+    const PORT = Number(process.env.PORT) || 3000;
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Barrantuba Clube de Pesca server listening on http://0.0.0.0:${PORT}`);
+    });
+  }).catch((err) => {
+    console.error('Fatal error starting Barrantuba server:', err);
+    process.exitCode = 1;
+  });
+}
